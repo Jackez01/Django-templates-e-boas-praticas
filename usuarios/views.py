@@ -3,6 +3,7 @@ from usuarios.forms import LoginForms, CadastroForms
 
 from django.contrib.auth.models import User
 from django.contrib import auth
+from django.contrib import messages
 
 def login(request):
     form = LoginForms()
@@ -21,8 +22,10 @@ def login(request):
         )
         if usuario is not None:
             auth.login(request, usuario)
+            messages.success(request, f'{nome} logado com sucesso!')
             return redirect('index')
         else:
+            messages.error(request, 'Credenciais incorretas')
             return redirect('login')
 
     return  render(request, 'usuarios/login.html', {'form': form})
@@ -34,6 +37,7 @@ def cadastro(request):
         form = CadastroForms(request.POST)
 
         if form.is_valid():
+            messages.error(request, 'Senhas não correspondem')
             if form['senha_1'].value() != form['senha_2'].value():
                  return redirect('cadastro')
 
@@ -42,6 +46,7 @@ def cadastro(request):
             senha=form['senha_1'].value()
 
             if User.objects.filter(username=nome).exists():
+                messages.error(request, 'Usuário já existente')
                 return redirect('cadastro')
 
             usuario = User.objects.create_user(
@@ -50,6 +55,7 @@ def cadastro(request):
                 password=senha
             )
             usuario.save()
+            messages.success(request, 'Cadastro efetuado com sucesso')
             return redirect('login')
 
     return  render(request, 'usuarios/cadastro.html', {'form': form})
